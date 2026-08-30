@@ -1,0 +1,38 @@
+# secrets — ΠΟΤΕ στο git
+.env
+.env.*
+!.env.example
+config/local.json
+
+# runtime data
+data/
+*.db
+# ΕΞΑΙΡΕΣΗ: η βάση-αφετηρία ζει στο repo ώστε το Streamlit Cloud να μη
+# ξεκινά από μηδενική μνήμη μετά από κάθε restart.
+!seed/vrgr_seed.db
+*.db-wal
+*.db-shm
+*.sqlite3
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# media / artifacts
+*.mp4
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.wav
+*.m4a
+!docs/**/*.png
+
+# os
+.DS_Store

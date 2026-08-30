@@ -1,0 +1,28 @@
+[project]
+name = "vrgr"
+version = "1.0.0"
+description = "Instagram Reels Viral Caption & Hashtag Intelligence — Greek market"
+requires-python = ">=3.9"
+dependencies = ["httpx>=0.27", "pydantic>=2.6", "numpy>=1.24", "anthropic>=0.40"]
+
+[project.optional-dependencies]
+video    = ["imageio-ffmpeg>=0.5.1", "Pillow>=10.0"]
+api      = ["fastapi>=0.110", "uvicorn>=0.29"]
+postgres = ["psycopg[binary]>=3.1", "pgvector>=0.2"]
+voyage   = ["voyageai>=0.2"]
+openai   = ["openai>=1.30"]
+dev      = ["pytest>=8.0"]
+
+[project.scripts]
+vrgr = "vrgr.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths  = ["tests"]

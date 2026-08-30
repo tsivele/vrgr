@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VRGR — Viral Intelligence</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<style>
+  :root{
+    --bg:#0e1014; --panel:#161a21; --panel2:#1d222b; --line:#272d38;
+    --txt:#e8ecf2; --dim:#96a0b0; --faint:#5f6874;
+    --accent:#5b9dff; --good:#3ecf8e; --warn:#ffb454; --bad:#ff6b6b;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  a{color:var(--accent)}
+  button{font:inherit;cursor:pointer;border:0;border-radius:8px;
+         padding:9px 16px;background:var(--accent);color:#07101f;font-weight:600}
+  button:hover{filter:brightness(1.1)} button:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line);font-weight:500}
+  input,textarea,select{font:inherit;background:var(--panel2);color:var(--txt);
+       border:1px solid var(--line);border-radius:8px;padding:9px 12px;width:100%}
+  input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 60px}
+  header{border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:20}
+  .hdr{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .logo{font-weight:700;letter-spacing:.4px;font-size:17px}
+  .logo span{color:var(--accent)}
+  .chips{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:99px;
+        padding:4px 11px;font-size:12.5px;color:var(--dim);white-space:nowrap}
+  .chip b{color:var(--txt);font-weight:600}
+  .chip.ok b{color:var(--good)} .chip.err b{color:var(--bad)}
+  nav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 24px}
+  nav button{background:none;color:var(--dim);border-radius:0;padding:12px 16px;
+             border-bottom:2px solid transparent;font-weight:500}
+  nav button.on{color:var(--txt);border-bottom-color:var(--accent)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+         padding:20px;margin-bottom:16px}
+  h2{margin:0 0 4px;font-size:16px} h3{margin:22px 0 10px;font-size:14px;color:var(--dim);
+     text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .sub{color:var(--dim);font-size:13.5px;margin:0 0 16px}
+  .drop{border:2px dashed var(--line);border-radius:var(--radius);padding:38px 20px;
+        text-align:center;transition:.15s;cursor:pointer;background:var(--panel2)}
+  .drop:hover,.drop.over{border-color:var(--accent);background:#1a2130}
+  .drop .big{font-size:34px;margin-bottom:8px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  label{display:block;font-size:12.5px;color:var(--dim);margin:0 0 5px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .steps{display:flex;flex-direction:column;gap:2px;margin-top:14px}
+  .step{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:7px;font-size:13.5px;color:var(--faint)}
+  .step .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);
+             flex:0 0 18px;display:grid;place-items:center;font-size:10px}
+  .step.done{color:var(--dim)} .step.done .dot{background:var(--good);border-color:var(--good);color:#07101f}
+  .step.now{color:var(--txt);background:var(--panel2)} .step.now .dot{border-color:var(--accent);
+             border-right-color:transparent;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:14px 0 6px}
+  .bar i{display:block;height:100%;background:var(--accent);transition:width .4s}
+  .score{display:flex;align-items:baseline;gap:12px;margin:6px 0 2px}
+  .score b{font-size:52px;line-height:1;font-weight:700}
+  .score .of{color:var(--faint);font-size:18px}
+  .score .band{margin-left:auto;text-align:right;color:var(--dim);font-size:13px;
+               line-height:1.5;align-self:flex-end}
+  /* Χωρίς αυτό, το <b> μέσα στο band κληρονομεί το 52px του σκορ. */
+  .score .band b{font-size:13px;font-weight:600;color:var(--txt)}
+  .copybox{position:relative;background:var(--panel2);border:1px solid var(--line);
+           border-radius:10px;padding:16px 16px 14px;margin:8px 0}
+  .copybox pre{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit}
+  .copybox .tags{color:var(--accent);font-size:13.5px;line-height:1.7;word-break:break-word}
+  .copybox button{position:absolute;top:10px;right:10px;padding:5px 11px;font-size:12px}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+        border-radius:99px;padding:3px 10px;font-size:12px;color:var(--dim);margin:0 5px 5px 0}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--faint);font-weight:600;font-size:11.5px;
+     text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .vf{color:var(--good);font-weight:600}
+  .pbar{height:5px;background:var(--panel2);border-radius:99px;overflow:hidden;min-width:70px}
+  .pbar i{display:block;height:100%;background:var(--accent)}
+  .muted{color:var(--dim)} .small{font-size:12.5px} .mono{font-variant-numeric:tabular-nums}
+  .ev{border-left:2px solid var(--line);padding:2px 0 2px 14px;margin:0 0 14px}
+  .ev .q{color:var(--dim);font-style:italic;margin:4px 0}
+  details{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:var(--panel2)}
+  summary{cursor:pointer;font-weight:600;font-size:14px}
+  .err{background:#2a1618;border:1px solid #5c2b2f;color:#ffc9c9;padding:12px 14px;border-radius:10px;margin:10px 0}
+  .ok{background:#152a20;border:1px solid #2a5c45;color:#b8f0d4;padding:12px 14px;border-radius:10px;margin:10px 0}
+  .warn{background:#2a2416;border:1px solid #5c4f2b;color:#f0e2b8;padding:11px 14px;border-radius:10px;margin:8px 0;font-size:13.5px}
+  .hide{display:none!important}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);
+        border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+</style>
+</head>
+<body>
+<header><div class="hdr">
+  <div class="logo">VRGR <span>·</span> Viral Intelligence <span>GR</span></div>
+  <div class="chips" id="chips"></div>
+</div></header>
+
+<div class="wrap">
+  <nav>
+    <button class="on" data-tab="analyze">Ανάλυση</button>
+    <button data-tab="history">Ιστορικό</button>
+    <button data-tab="research">Έρευνα</button>
+    <button data-tab="memory">Μνήμη</button>
+  </nav>
+
+  <!-- ══ ΑΝΑΛΥΣΗ ══ -->
+  <section id="tab-analyze">
+    <div class="panel" id="uploader">
+      <h2>Ανάλυση Reel</h2>
+      <p class="sub">Ανέβασε το βίντεο. Το σύστημα θα το αναλύσει, θα ερευνήσει πραγματικά
+         ελληνικά δεδομένα Instagram, και θα <b>αποφασίσει</b> λεζάντα και hashtags.</p>
+      <div class="drop" id="drop">
+        <div class="big">🎬</div>
+        <div><b>Σύρε το βίντεο εδώ</b> ή κάνε κλικ για επιλογή</div>
+        <div class="small muted" style="margin-top:6px">mp4 · mov · webm — έως 400 MB</div>
+        <input type="file" id="file" accept="video/*" class="hide">
+      </div>
+      <div id="picked" class="hide" style="margin-top:14px"></div>
+      <h3>Ρυθμίσεις</h3>
+      <div class="grid">
+        <div><label>Συμφραζόμενα (προαιρετικά)</label>
+          <input id="context" placeholder="π.χ. Reel για τη σελίδα μαγειρικής μου"></div>
+        <div><label>Benchmark λογαριασμοί (προαιρετικά)</label>
+          <input id="creators" placeholder="user1, user2, user3"></div>
+        <div><label>Υποψήφιες λεζάντες</label>
+          <select id="captions"><option>6</option><option selected>8</option><option>10</option></select></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button id="go" disabled>Έναρξη ανάλυσης</button>
+        <label class="row small muted" style="margin:0;gap:6px">
+          <input type="checkbox" id="noresearch" style="width:auto"> Χωρίς έρευνα HikerAPI (γρήγορο, χαμηλό σκορ)</label>
+      </div>
+      <div id="uperr"></div>
+    </div>
+
+    <div class="panel hide" id="progress">
+      <h2>Σε εξέλιξη…</h2>
+      <p class="sub" id="ptitle"></p>
+      <div class="bar"><i id="pbar" style="width:0"></i></div>
+      <div class="small muted" id="pmeta"></div>
+      <div class="steps" id="psteps"></div>
+    </div>
+
+    <div id="result"></div>
+  </section>
+
+  <!-- ══ ΙΣΤΟΡΙΚΟ ══ -->
+  <section id="tab-history" class="hide">
+    <div class="panel">
+      <h2>Προηγούμενες αναλύσεις</h2>
+      <p class="sub">Μετά τη δημοσίευση, κατέγραψε το πραγματικό αποτέλεσμα — εκεί μαθαίνει το σύστημα.</p>
+      <div id="runs"><span class="spin"></span></div>
+    </div>
+  </section>
+
+  <!-- ══ ΕΡΕΥΝΑ ══ -->
+  <section id="tab-research" class="hide">
+    <div class="panel">
+      <h2>Έρευνα</h2>
+      <p class="sub">Δες τι πετυχαίνει ένας λογαριασμός ή ένα hashtag — με V/F, δηλαδή απόδοση
+         σε σχέση με το μέγεθος του λογαριασμού.</p>
+      <div class="row">
+        <input id="rtarget" placeholder="@λογαριασμός ή #hashtag" style="flex:1;min-width:240px">
+        <button id="rgo">Έρευνα</button>
+      </div>
+      <div id="rout" style="margin-top:16px"></div>
+    </div>
+  </section>
+
+  <!-- ══ ΜΝΗΜΗ ══ -->
+  <section id="tab-memory" class="hide">
+    <div class="panel">
+      <h2>Μνήμη</h2>
+      <p class="sub">Ό,τι έχει μάθει το σύστημα. Μεγαλώνει με κάθε ανάλυση.</p>
+      <div class="row">
+        <input id="mq" placeholder="Σημασιολογική αναζήτηση… π.χ. «περιμένω μήνυμα»" style="flex:1;min-width:240px">
+        <button id="mgo" class="ghost">Αναζήτηση</button>
+      </div>
+      <div id="mout" style="margin-top:16px"><span class="spin"></span></div>
+    </div>
+  </section>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Ρυθμίσεις Streamlit για το VRGR.
+[server]
+# Reel 4K από κινητό φτάνει εύκολα τα 300 MB — το default των 200 MB δεν αρκεί.
+maxUploadSize = 400
+# ΜΟΝΟ localhost: η εφαρμογή βλέπει τα κλειδιά και τη βάση σου.
+address = "127.0.0.1"
+headless = false
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "dark"
+primaryColor = "#5b9dff"
+backgroundColor = "#0e1014"
+secondaryBackgroundColor = "#161a21"
+textColor = "#e8ecf2"
