@@ -35,32 +35,73 @@ def _load_dotenv(path: Path) -> None:
             os.environ[key] = val
 
 
+# Τι πήγε στραβά με τα Streamlit secrets, για να το δείξει η διεπαφή.
+SECRETS_ERROR: str = ""
+SECRETS_LOADED: list = []
+
+
 def _load_streamlit_secrets() -> None:
     """
     Γέφυρα προς τα `st.secrets` για ανάπτυξη σε Streamlit Cloud.
 
-    Στο cloud δεν υπάρχει αρχείο `.env` — τα κλειδιά δίνονται από το panel του
-    Streamlit. Τα αντιγράφουμε στο περιβάλλον ΜΟΝΟ όσα λείπουν, ώστε η
-    υπόλοιπη εφαρμογή να μη χρειάζεται να ξέρει πού τρέχει.
+    ΚΡΙΣΙΜΟ: τα σφάλματα ΔΕΝ καταπίνονται.
+
+    Η πρώτη εκδοχή είχε `except Exception: continue`. Όταν το TOML των
+    secrets ήταν άκυρο (π.χ. ένα κλειδί κομμένο σε δύο γραμμές — εύκολο
+    λάθος όταν κάνεις paste μακρύ κλειδί), η ανάγνωση απέτυχε σιωπηλά και
+    η εφαρμογή έλεγε «λείπει το ANTHROPIC_API_KEY». Ο χρήστης έβλεπε τα
+    κλειδιά αποθηκευμένα και την εφαρμογή να λέει ότι λείπουν, χωρίς καμία
+    ένδειξη για την πραγματική αιτία.
+
+    Ένα άκυρο TOML ρίχνει ΟΛΟ το αρχείο — γι' αυτό «λείπουν» και τα δύο
+    κλειδιά ακόμη κι αν μόνο το ένα είναι χαλασμένο.
     """
+    global SECRETS_ERROR, SECRETS_LOADED
     try:
         import streamlit as st                      # noqa: PLC0415
-        secrets = st.secrets
-    except Exception:                               # noqa: BLE001
+    except ImportError:
         return                                      # δεν τρέχουμε σε Streamlit
+
+    try:
+        secrets = st.secrets
+        available = set(secrets.keys())              # εδώ γίνεται το parsing
+    except Exception as exc:                         # noqa: BLE001
+        name = type(exc).__name__
+        if "SecretNotFound" in name or "FileNotFound" in name:
+            return                                   # τοπική εκτέλεση — φυσιολογικό
+        SECRETS_ERROR = (
+            f"Τα Secrets δεν διαβάζονται ({name}). Συνήθης αιτία: κάποιο "
+            f"κλειδί είναι κομμένο σε δύο γραμμές. Κάθε τιμή πρέπει να είναι "
+            f"σε ΜΙΑ γραμμή, σε εισαγωγικά. Λεπτομέρεια: {str(exc)[:200]}")
+        return
+
     for key in ("HIKER_API_KEY", "ANTHROPIC_API_KEY", "VOYAGE_API_KEY",
                 "OPENAI_API_KEY", "GROQ_API_KEY", "VRGR_DATA_DIR",
                 "VRGR_EMBEDDING_PROVIDER", "VRGR_ASR_PROVIDER",
                 "VRGR_VISION_MODEL", "VRGR_WRITER_MODEL", "VRGR_FAST_MODEL",
                 "HIKER_BUDGET_PER_RUN", "VRGR_MAX_FRAMES"):
-        if os.environ.get(key):
+        if os.environ.get(key) or key not in available:
             continue
         try:
             value = secrets[key]
-        except Exception:                           # noqa: BLE001
+        except Exception as exc:                     # noqa: BLE001
+            SECRETS_ERROR = f"Το «{key}» δεν διαβάζεται: {type(exc).__name__}"
             continue
-        if value:
-            os.environ[key] = str(value)
+        text = str(value).strip()
+        if not text:
+            continue
+        if "\n" in text or "\r" in text:
+            SECRETS_ERROR = (
+                f"Το «{key}» περιέχει αλλαγή γραμμής. Βάλ' το σε ΜΙΑ γραμμή "
+                f"μέσα σε εισαγωγικά, χωρίς κενά ή enter στη μέση.")
+            continue
+        os.environ[key] = text
+        SECRETS_LOADED.append(key)
+
+
+def secrets_diagnostics() -> dict:
+    """Τι είδε η γέφυρα secrets — για τη διεπαφή."""
+    return {"error": SECRETS_ERROR, "loaded": list(SECRETS_LOADED)}
 
 
 def _env(key: str, default: str = "") -> str:

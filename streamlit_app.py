@@ -100,6 +100,15 @@ def sidebar() -> None:
     c1, c2 = st.sidebar.columns(2)
     c1.metric("HikerAPI", "✓" if info["hiker"] else "✗")
     c2.metric("Anthropic", "✓" if info["anthropic"] else "✗")
+    # Αν τα secrets υπάρχουν αλλά δεν διαβάζονται, ΑΥΤΟ είναι το πραγματικό
+    # πρόβλημα — όχι το «λείπει το κλειδί» που θα έστελνε τον χρήστη αλλού.
+    from vrgr.config import secrets_diagnostics
+    diag = secrets_diagnostics()
+    if diag["error"]:
+        st.sidebar.error(f"⚠ **Πρόβλημα στα Secrets**\n\n{diag['error']}", icon="🔑")
+    elif diag["loaded"]:
+        st.sidebar.caption(f"Secrets: {len(diag['loaded'])} φορτώθηκαν ✓")
+
     if not info["anthropic"]:
         st.sidebar.error("Λείπει το ANTHROPIC_API_KEY — η ανάλυση δεν θα δουλέψει.")
     if not info["hiker"]:
