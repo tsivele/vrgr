@@ -56,3 +56,52 @@ def test_spearman_measures_ranking_not_value():
     assert _spearman([1, 2, 3, 4, 5], [10, 20, 30, 40, 50]) == 1.0
     assert _spearman([1, 2, 3, 4, 5], [50, 40, 30, 20, 10]) == -1.0
     assert _spearman([1, 2], [1, 2]) is None       # πολύ λίγα δείγματα
+
+
+# ── κανονικοποίηση niche ──────────────────────────────────────────────
+
+def test_free_text_niches_collapse_to_one_key():
+    """
+    Το σφάλμα που ακύρωνε ολόκληρη τη μάθηση.
+
+    Τέσσερις αναλύσεις ΤΟΥ ΙΔΙΟΥ βίντεο έδωσαν τέσσερα διαφορετικά niche από
+    το μοντέλο. Επειδή το niche είναι μέρος του κλειδιού των μοτίβων, κάθε
+    εκτέλεση έφτιαχνε ΝΕΑ μοτίβα αντί να ενισχύει τα υπάρχοντα: 32 μοτίβα,
+    μέσο n=0,56, κανένα αξιοποιήσιμο.
+    """
+    from vrgr.niches import canonical
+    real_outputs = [
+        ("Lifestyle & Personality Creators", "Talking-head thirst trap"),
+        ("Lifestyle & Attention-Based Creator Content", "Talking-head κοπέλας"),
+        ("Lifestyle και Personality Content", "Talking-head storytime"),
+        ("Lifestyle / Προσωπικό Brand", "Talking-head με thirst-trap"),
+    ]
+    keys = {canonical(n, s) for n, s in real_outputs}
+    assert keys == {"lifestyle"}, keys
+
+
+def test_canonical_niche_handles_greek_english_and_greeklish():
+    from vrgr.niches import canonical, OTHER
+    assert canonical("Greek Comedy & Memes", "") == "χιούμορ"
+    assert canonical("χιούμορ", "") == "χιούμορ"
+    assert canonical("Relationship humor", "ζευγάρια") == "σχέσεις"
+    assert canonical("Food & Recipes", "ελληνική κουζίνα") == "φαγητό"
+    assert canonical("Fitness motivation", "προπόνηση") == "γυμναστική"
+    # Χωρίς πραγματική ένδειξη → «άλλο», ποτέ λάθος κατηγορία που θα
+    # μόλυνε τα μοτίβα άλλου niche.
+    assert canonical("qwerty zxcvbn", "") == OTHER
+    assert canonical("", "") == OTHER
+
+
+def test_patterns_accumulate_across_runs_with_same_niche(db):
+    """Με κανονικό κλειδί, τρεις εκτελέσεις δίνουν n=3, όχι 3× n=1."""
+    from vrgr.memory.patterns import PatternStore, structure_key
+    from vrgr.niches import canonical
+    ps = PatternStore(db)
+    for label in ("Lifestyle & Personality Creators",
+                  "Lifestyle και Personality Content",
+                  "Lifestyle / Προσωπικό Brand"):
+        ps.observe(structure_key("ερώτηση"), "caption_structure",
+                   success=True, niche=canonical(label))
+    p = ps.get(structure_key("ερώτηση"), "lifestyle")
+    assert p is not None and p.n == 3.0

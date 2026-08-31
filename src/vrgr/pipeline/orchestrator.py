@@ -31,6 +31,7 @@ from ..memory.retrieval import MemoryRetriever
 from ..research import mining as MINE
 from ..research import planner as PLAN
 from ..research.collector import Collector
+from .. import niches as NICHE
 from ..schemas import (AnalysisResult, EvidenceItem, MinedPatterns, Origin,
                        ResearchBundle, VideoAnalysis, ViralAngle)
 from ..scoring import ranking as RANK
@@ -131,7 +132,15 @@ class Pipeline:
         plan = PLAN.plan(analysis.content, angle, self.llm,
                          self.settings.config_dir, budget,
                          self.settings.models.fast_model)
-        niche = plan["niche"] or analysis.content.niche
+        # ΔΥΟ ΞΕΧΩΡΙΣΤΑ ΠΡΑΓΜΑΤΑ:
+        #   `niche_label` — η ελεύθερη περιγραφή του μοντέλου, για το report
+        #   `niche`       — κανονικό κλειδί, για μνήμη και μοτίβα
+        # Χωρίς τον διαχωρισμό, το ίδιο βίντεο δίνει κάθε φορά άλλο κλειδί
+        # («Lifestyle & Personality Creators» vs «Lifestyle / Προσωπικό Brand»)
+        # και η μάθηση δεν συσσωρεύεται ΠΟΤΕ.
+        niche_label = plan["niche"] or analysis.content.niche
+        niche = NICHE.canonical(niche_label, analysis.content.sub_niche)
+        log.info("     → niche «%s» → κλειδί «%s»", niche_label, niche)
 
         # ΒΗΜΑ 5 — Έρευνα HikerAPI
         research: Optional[ResearchBundle] = None
