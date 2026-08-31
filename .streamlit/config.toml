@@ -16,7 +16,10 @@ maxUploadSize = 400
 # δείχνει «Oh no. Error running app.» χωρίς κανένα traceback.
 headless = true
 
-fileWatcherType = "none"
+# «auto» και όχι «none»: με «none» το Streamlit δεν ξαναφορτώνει modules
+# μετά από code pull — έτρεχε το νέο streamlit_app.py με το παλιό vrgr.config
+# στη μνήμη και έριχνε ImportError σε κάθε νέο σύμβολο.
+fileWatcherType = "auto"
 
 # Η `address` ΔΕΝ ορίζεται εδώ επίτηδες: στο cloud τη διαχειρίζεται η
 # πλατφόρμα. Για πρόσβαση από άλλη συσκευή του τοπικού δικτύου:

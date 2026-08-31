@@ -102,8 +102,15 @@ def sidebar() -> None:
     c2.metric("Anthropic", "✓" if info["anthropic"] else "✗")
     # Αν τα secrets υπάρχουν αλλά δεν διαβάζονται, ΑΥΤΟ είναι το πραγματικό
     # πρόβλημα — όχι το «λείπει το κλειδί» που θα έστελνε τον χρήστη αλλού.
-    from vrgr.config import secrets_diagnostics
-    diag = secrets_diagnostics()
+    # Ανθεκτικό import: μετά από code pull, το Streamlit ξανατρέχει το κύριο
+    # script αλλά ΔΕΝ ξαναφορτώνει modules που είναι ήδη στο sys.modules
+    # (ιδίως με fileWatcherType="none"). Ένα νέο σύμβολο τότε λείπει και το
+    # σκέτο import ρίχνει ολόκληρη την εφαρμογή με ImportError.
+    try:
+        from vrgr.config import secrets_diagnostics
+        diag = secrets_diagnostics()
+    except ImportError:
+        diag = {"error": "", "loaded": []}
     if diag["error"]:
         st.sidebar.error(f"⚠ **Πρόβλημα στα Secrets**\n\n{diag['error']}", icon="🔑")
     elif diag["loaded"]:
