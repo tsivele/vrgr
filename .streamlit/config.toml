@@ -1,14 +1,26 @@
 # Ρυθμίσεις Streamlit για το VRGR.
+#
+# ΠΡΟΣΟΧΗ: αυτό το αρχείο ισχύει ΚΑΙ τοπικά ΚΑΙ στο Streamlit Cloud.
+# Ό,τι μπαίνει εδώ πρέπει να είναι σωστό και για τα δύο περιβάλλοντα.
+# Ρυθμίσεις που αφορούν μόνο το ένα (π.χ. διεύθυνση δικτύου) δίνονται με
+# παραμέτρους γραμμής εντολών, όχι εδώ.
+
 [server]
 # Reel 4K από κινητό φτάνει εύκολα τα 300 MB — το default των 200 MB δεν αρκεί.
 maxUploadSize = 400
-# Ακούει σε όλες τις διεπαφές ώστε να είναι προσβάσιμη από άλλη συσκευή του
-# ΙΔΙΟΥ δικτύου (π.χ. το Windows ή το κινητό σου). Στο τοπικό σου δίκτυο μόνο —
-# δεν βγαίνει στο internet. Αν θες να την κλειδώσεις πάλι μόνο στο Mac,
-# ξαναβάλε address = "127.0.0.1".
-address = "0.0.0.0"
-headless = false
+
+# ΥΠΟΧΡΕΩΤΙΚΑ true. Με `headless = false` το Streamlit εμφανίζει το
+# onboarding prompt «enter your email address» και ΠΕΡΙΜΕΝΕΙ είσοδο. Σε
+# server χωρίς οθόνη η διεργασία δεν δένει ποτέ στη θύρα και ο health check
+# του Streamlit Cloud αποτυγχάνει με «connection refused» — η εφαρμογή
+# δείχνει «Oh no. Error running app.» χωρίς κανένα traceback.
+headless = true
+
 fileWatcherType = "none"
+
+# Η `address` ΔΕΝ ορίζεται εδώ επίτηδες: στο cloud τη διαχειρίζεται η
+# πλατφόρμα. Για πρόσβαση από άλλη συσκευή του τοπικού δικτύου:
+#     streamlit run streamlit_app.py --server.address 0.0.0.0
 
 [browser]
 gatherUsageStats = false
